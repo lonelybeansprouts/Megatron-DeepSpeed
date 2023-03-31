@@ -1,5 +1,10 @@
 pip3 install -r requirements.txt
 
+git clone https://github.com/NVIDIA/apex
+cd apex
+pip install --global-option="--cpp_ext" --global-option="--cuda_ext" --no-cache -v --disable-pip-version-check .  2>&1 | tee build.log
+cd -
+
 mkdir -p data
 wget https://s3.amazonaws.com/models.huggingface.co/bert/gpt2-vocab.json -O data/gpt2-vocab.json
 wget https://s3.amazonaws.com/models.huggingface.co/bert/gpt2-merges.txt -O data/gpt2-merges.txt
@@ -14,9 +19,6 @@ python3 tools/preprocess_data.py \
     --append-eod \
     --workers 4
 
-N_GPUS=1
-TP_SIZE=1
-
 
 CHECKPOINT_PATH=checkpoints/gpt2
 
@@ -25,10 +27,10 @@ MERGE_FILE=data/gpt2-merges.txt
 DATA_PATH=data/meg-gpt2-oscar-en-10k_text_document
 TENSORBOARD_PATH=output_dir/tensorboard
 
-N_GPUS=2
+N_GPUS=1
 MICRO_BATCH_SIZE=1
 GLOBAL_BATCH_SIZE=16
-TP_SIZE=2
+TP_SIZE=1
 PP_SIZE=1
 
 NLAYERS=2
@@ -129,7 +131,7 @@ ALL_ARGS="$GPT_ARGS $OUTPUT_ARGS $DATA_ARGS $DEEPSPEED_ARGS"
 MASTER_ADDR=localhost
 MASTER_PORT=6777
 
-export LAUNCHER="python -u -m torch.distributed.run \
+export LAUNCHER="python3 -u -m torch.distributed.run \
     --nproc_per_node $N_GPUS \
     --nnodes 1 \
     --rdzv_endpoint $MASTER_ADDR:$MASTER_PORT \
